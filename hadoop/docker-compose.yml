@@ -99,6 +99,19 @@ services:
     depends_on:
       - zookeeper
 
+  flask-backend:
+    build: ../flask
+    container_name: flask-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - KAFKA_BROKER=kafka:9092
+      - ZOOKEEPER_HOST=zookeeper:2181
+    depends_on:
+      - kafka
+    volumes:
+      - ./flask:/app
+
 volumes:
   hadoop_namenode:
   hadoop_datanode:
