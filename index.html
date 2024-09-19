@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { display: block; }
+			.navigation {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-button {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: none;
+            padding: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 10px;
+        }
+		</style>
+		<script type="importmap">
+			{
+			  "imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@v0.168.0/build/three.module.js",
+				"three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.168.0/examples/jsm/"
+			  }
+			}
+		  </script>
+	</head>
+	<body>
+		<div id="planetsContainer"></div>
+		<div class="navigation">
+			<button id="prevPage" class="nav-button">←</button>
+			<button id="nextPage" class="nav-button">→</button>
+			
+		</div>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+		<script type="module" src="main.js"></script>	</body>
+</html>
