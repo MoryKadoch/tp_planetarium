@@ -22,7 +22,7 @@ document.body.appendChild(renderer.domElement);
 
 // Étoile
 const textureLoader = new THREE.TextureLoader();
-const starTexture = textureLoader.load('../public/img/8k_stars_milky_way.jpg');
+const starTexture = textureLoader.load('../public/img/8k_stars.jpg');
 scene.background = starTexture;  // Définir l'arrière-plan de la scène
 
 // Lumières
@@ -120,6 +120,27 @@ function animate() {
 
 // Démarrer l'animation
 animate();
+
+// Gestion de l'affichage du formulaire
+const toggleFormButton = document.getElementById('toggleFormButton');
+const formContainer = document.getElementById('formContainer');
+const overlay = document.getElementById('overlay');
+
+toggleFormButton.addEventListener('click', () => {
+    if (formContainer.style.display === 'none' || formContainer.style.display === '') {
+        formContainer.style.display = 'block';
+        overlay.style.display = 'block';  // Affiche l'overlay
+    } else {
+        formContainer.style.display = 'none';
+        overlay.style.display = 'none';  // Cache l'overlay
+    }
+});
+
+// Fermer le formulaire en cliquant sur l'overlay
+overlay.addEventListener('click', () => {
+    formContainer.style.display = 'none';
+    overlay.style.display = 'none';  // Cache l'overlay
+});
 
 // Événements pour le zoom et le drag
 window.addEventListener('wheel', (event) => {
