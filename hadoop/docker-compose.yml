@@ -103,16 +103,31 @@ services:
     build: ../flask
     container_name: flask-backend
     ports:
-      - "5000:5000"
+      - 5000:5000
     environment:
-      - KAFKA_BROKER=kafka:9092
-      - ZOOKEEPER_HOST=zookeeper:2181
+      - KAFKA_BOOTSTRAP_SERVERS=kafka-1:9092
+      - HDFS_URI=hdfs://namenode:9000
+      - MONGODB_URI=mongodb://mongodb:27017/planetarium_db
     depends_on:
       - kafka
+      - mongodb
+    networks:
+      - kafka-net
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - 27017
     volumes:
-      - ./flask:/app
+      - mongo-data:/data/db
 
 volumes:
   hadoop_namenode:
   hadoop_datanode:
   hadoop_historyserver:
+  mongo-data:
+
+networks:
+  kafka-net:
+    driver: bridge

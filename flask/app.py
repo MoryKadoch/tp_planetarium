@@ -1,64 +1,68 @@
 from flask import Flask, redirect, jsonify, request
 from pymongo import MongoClient
 from bson import ObjectId
-from flask_kafka import FlaskKafka
-
+import os
+from confluent_kafka import Producer
+import json
+ 
 app = Flask(__name__)
-app.config["KAFKA_CONFIG"] = {
-  'bootstrap.servers': 'localhost:9092',
-  'group.id': 'planets',
-  'enable.auto.commit': 'false',
-  'auto.offset.reset': 'earliest'
-}
-
-bus = FlaskKafka()
-bus.init_app(app)
-
-client = MongoClient('localhost', 27017)
+ 
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/planetarium_db")
+ 
+client = MongoClient(MONGODB_URI)
 db = client.planetarium_db
 planets_collection = db.planets
-
+ 
+conf = {'bootstrap.servers': "localhost:9092"}
+producer = Producer(**conf)
+ 
+def delivery_report(err, msg):
+  if err is not None:
+    print(f"Message delivery failed: {err}")
+  else:
+    print(f"Message delivered to {msg.topic()} [{msg.partition()}]")
+ 
 @app.route('/')
 def redirectToHome():
   return redirect("/api", code=302)
-
-
+ 
+ 
 @app.route('/api', methods=['GET'])
 def home():
   return "Welcome to Planetarium API !"
-
-
+ 
+ 
 @app.route('/api/planets', methods=['GET'])
 def get_planets():
   try:
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 20))
     offset = (page - 1) * limit
-    planets_cursor = planets_collection.find().skip(offset).limit(limit)
+    planets_cursor = planets_collection.find().sort('_id', -1).skip(offset).limit(limit)
     planets = list(planets_cursor)
-
+ 
     for planet in planets:
       planet['_id'] = str(planet['_id'])
-
+ 
     return jsonify(planets), 200
   
   except Exception as e:
     return jsonify({ "error": str(e) }), 500
-
-
+ 
+ 
 @app.route('/api/planet', methods=['GET', 'POST'])
-def add_planet():
+def handle_planet():
   if request.method == 'GET':
     try:
       planet_id = request.args.get('id')
       planet_name = request.args.get('name')
-
+ 
       query = {}
-
+ 
       if planet_id:
         try:
           query['_id'] = ObjectId(planet_id)
-
+ 
         except Exception:
           return jsonify  ({ "error": "ID invalide." }), 400
       elif planet_name:
@@ -69,10 +73,10 @@ def add_planet():
       print(query)
       
       planet = planets_collection.find_one(query)
-
+ 
       if planet:
         planet['_id'] = str(planet['_id'])
-        return jsonify(planet), 200 
+        return jsonify(planet), 200
       else:
         return jsonify({ "error": "Planète non trouvée." }), 404
     
@@ -82,7 +86,7 @@ def add_planet():
   elif request.method == 'POST':
     try:
       data = request.get_json()
-
+ 
       required_fields = {
         'Name': str,
         'Num_Moons': int,
@@ -94,7 +98,7 @@ def add_planet():
         'Water_Presence': bool,
         'Colonisable': bool
       }
-
+ 
       for field, field_type in required_fields.items():
         if field not in data:
             return jsonify({ "error": f"Le champ '{field}' est manquant." }), 400
@@ -116,9 +120,12 @@ def add_planet():
         'Water_Presence': data['Water_Presence'],
         'Colonisable': data['Colonisable']
       }
-
+ 
       result = planets_collection.insert_one(new_planet)
-
+ 
+      producer.produce('planets', key="planet", value=json.dumps({ **new_planet, "_id": str(result.inserted_id) }), callback=delivery_report)
+      producer.flush()
+ 
       return jsonify({
           "message": "Nouvelle planète ajoutée avec succès.",
           "planet": { **new_planet, "_id": str(result.inserted_id) }
@@ -127,31 +134,31 @@ def add_planet():
     except Exception as e:
       return jsonify({ "error": str(e) }), 500
     
-
+ 
 @app.route('/api/planet/<planet_id>', methods=['PUT', 'DELETE'])
 def update_planet(planet_id):
   if request.method == 'PUT':
     try:
       data = request.get_json()
-
+ 
       try:
         planet_id_obj = ObjectId(planet_id)
       except Exception:
         return jsonify({"error": "ID invalide."}), 400
       
       existing_planet = planets_collection.find_one({ "_id": planet_id_obj })
-
+ 
       if not existing_planet:
         return jsonify({"error": "Planète non trouvée."}), 404
       
       if "Name" in data and data["Name"] != existing_planet["Name"]:
         duplicate_planet = planets_collection.find_one({"Name": data["Name"]})
-
+ 
         if duplicate_planet:
           return jsonify({ "error": "Une planète avec ce nom existe déjà." }), 400
       
       update_fields = {}
-
+ 
       for field in ['Name', 'Num_Moons', 'Minerals', 'Gravity', 'Sunlight_Hours', 'Temperature', 'Rotation_Time', 'Water_Presence', 'Colonisable']:
         if field in data:
           update_fields[field] = data[field]
@@ -163,10 +170,10 @@ def update_planet(planet_id):
         { "_id": planet_id_obj },
         { "$set": update_fields }
       )
-
+ 
       updated_planet = planets_collection.find_one({ "_id": planet_id_obj })
       updated_planet['_id'] = str(updated_planet['_id'])
-
+ 
       return jsonify({ "message": "Planète mise à jour avec succès.", "planet": updated_planet }), 200
     except Exception as e:
       return jsonify({"error": str(e)}), 500
@@ -179,52 +186,15 @@ def update_planet(planet_id):
         return jsonify({ "error": "ID invalide." }), 400
       
       planet = planets_collection.find_one({"_id": planet_id_obj})
-
+ 
       if not planet:
         return jsonify({ "error": "Planète non trouvée." }), 404
-
+ 
       planets_collection.delete_one({ "_id": planet_id_obj })
-
+ 
       return jsonify({"message": "Planète supprimée avec succès."}), 200
     except Exception as e:
       return jsonify({"error": str(e)}), 500
-
-
-# @app.route('/api/planets/update_colonisable', methods=['PUT'])
-# def update_all_colonisable():
-#   try:
-#     result = planets_collection.update_many(
-#       {},
-#       [
-#         {
-#           "$set": {
-#             "Colonisable": {
-#               "$cond": {
-#                 "if": {"$eq": ["$Colonisable", 1]},
-#                 "then": True,
-#                 "else": False
-#               }
-#             },
-#             "Water_Presence": {
-#               "$cond": {
-#                 "if": {"$eq": ["$Water_Presence", 1]},
-#                 "then": True,
-#                 "else": False
-#               }
-#             }
-#           }
-#         }
-#       ]
-#     )
-    
-#     return jsonify({
-#       "message": "Tous les documents ont été mis à jour.",
-#       "matched_count": result.matched_count,
-#       "modified_count": result.modified_count
-#     }), 200
-  
-#   except Exception as e:
-#     return jsonify({ "error" : str(e) }), 500
-
-if __name__ == '__main__':
-  app.run(debug=True)
+ 
+if __name__ == '__main__':  
+  app.run(host="0.0.0.0", port=5000, debug=True)
