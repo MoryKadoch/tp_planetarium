@@ -115,13 +115,15 @@ services:
       - kafka-net
 
   mongodb:
-      image: mongo:8.0
-      container_name: mongodb
-      ports:
-        - "27017:27017"
-      volumes:
-        - ./mongo-data:/data/db
-      restart: always
+    image: mongo:8.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data/db
+    restart: always
+    networks:
+      - kafka-net
 
   frontend:
     container_name: frontend
