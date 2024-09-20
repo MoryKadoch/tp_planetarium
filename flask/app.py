@@ -5,6 +5,8 @@ import os
 from confluent_kafka import Producer
 import json
 from flask_cors import CORS
+from tensorflow.keras.models import load_model
+import numpy as np
 
 app = Flask(__name__)
  
@@ -98,8 +100,7 @@ def handle_planet():
         'Sunlight_Hours': float,
         'Temperature': float,
         'Rotation_Time': float,
-        'Water_Presence': bool,
-        'Colonisable': bool
+        'Water_Presence': bool
       }
  
       for field, field_type in required_fields.items():
@@ -111,6 +112,19 @@ def handle_planet():
       existing_planet = planets_collection.find_one({"Name": data['Name']})
       if existing_planet:
         return jsonify({ "error": "Une planète avec ce nom existe déjà." }), 400
+      
+      # Charger le modèle .h5
+      model_path = 'colonisation_model.h5'
+      if not os.path.exists(model_path):
+          return jsonify({ "error": f"Le fichier de modèle '{model_path}' est introuvable." }), 500
+
+      model = load_model(model_path)
+      # Convertir la présence d'eau en valeur numérique
+      water_presence_numeric = 1 if data['Water_Presence'] else 0
+      X = np.array([[data['Num_Moons'], data['Minerals'], data['Gravity'], data['Sunlight_Hours'], data['Temperature'], data['Rotation_Time'], water_presence_numeric]])
+      # Prédire la colonisabilité
+      colonisable = bool(model.predict(X)[0][0] > 0.5)
+      data['Colonisable'] = colonisable
       
       new_planet = {
         'Name': data['Name'],
