@@ -2,6 +2,7 @@ from flask import Flask, redirect, jsonify, request
 from pymongo import MongoClient
 from bson import ObjectId
 from flask_kafka import FlaskKafka
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config["KAFKA_CONFIG"] = {
@@ -11,10 +12,11 @@ app.config["KAFKA_CONFIG"] = {
   'auto.offset.reset': 'earliest'
 }
 
+CORS(app)  # Autoriser les requêtes provenant de n'importe quelle origine (ou configurer précisément les origines autorisées)
 bus = FlaskKafka()
 bus.init_app(app)
 
-client = MongoClient('localhost', 27017)
+client = MongoClient('mongodb://localhost:27017/')  # Remplace par l'URL de ton MongoDB
 db = client.planetarium_db
 planets_collection = db.planets
 
@@ -34,7 +36,7 @@ def get_planets():
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 20))
     offset = (page - 1) * limit
-    planets_cursor = planets_collection.find().skip(offset).limit(limit)
+    planets_cursor = planets_collection.find().sort('_id', -1).skip(offset).limit(limit)
     planets = list(planets_cursor)
 
     for planet in planets:

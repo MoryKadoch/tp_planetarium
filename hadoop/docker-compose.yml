@@ -110,7 +110,19 @@ services:
     depends_on:
       - kafka
     volumes:
-      - ./flask:/app
+      - ../flask:/app
+
+  # Service pour ton front-end avec npx serve
+  frontend:
+    image: node:16-alpine  # Utilise une image Node.js
+    container_name: frontend
+    build:  "../frontend"
+    ports:
+      - "3000:3000"  # Expose le port où `npx serve` fonctionne
+    command: ["npx", "serve", "-s", "-l", "3000"]
+    depends_on:
+      - flask-backend
+    restart: always
 
 volumes:
   hadoop_namenode:
