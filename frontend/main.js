@@ -2,12 +2,12 @@ import * as THREE from 'three';
 
 // Tableau des textures disponibles
 const textures = [
-    'http://localhost:57442/frontend/public/img/8k_mercury.jpg',
-    'http://localhost:57442/frontend/public/img/8k_venus_surface.jpg',
-    'http://localhost:57442/frontend/public/img/8k_mars.jpg',
-    'http://localhost:57442/frontend/public/img/8k_jupiter.jpg',
-    'http://localhost:57442/frontend/public/img/8k_saturn.jpg',
-    'http://localhost:57442/frontend/public/img/8k_sun.jpg',
+    'http://localhost:3000/public/img/public/img/8k_mercury.jpg',
+    'http://localhost:3000/public/img/public/img/8k_venus_surface.jpg',
+    'http://localhost:3000/public/img/public/img/8k_mars.jpg',
+    'http://localhost:3000/public/img/public/img/8k_jupiter.jpg',
+    'http://localhost:3000/public/img/public/img/8k_saturn.jpg',
+    'http://localhost:3000/public/img/public/img/8k_sun.jpg',
 ];
 
 // Scène et caméra
@@ -58,7 +58,7 @@ document.body.appendChild(renderer.domElement);
 
 // Étoile
 const textureLoader = new THREE.TextureLoader();
-const starTexture = textureLoader.load('http://localhost:3000/frontend/public/img/8k_stars.jpg');
+const starTexture = textureLoader.load('http://localhost:3000/public/img/8k_stars.jpg');
 scene.background = starTexture;  // Définir l'arrière-plan de la scène
 
 // Lumières
@@ -198,7 +198,7 @@ function displayPlanets(planets) {
 
 // Fonction pour récupérer les planètes depuis le back-end
 function fetchPlanets(page = currentPage) {
-    fetch(`http://192.168.56.1:5000/api/planets?page=${page}&limit=20`)
+    fetch(`http://127.0.0.1:5000/api/planets?page=${page}&limit=20`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -231,7 +231,7 @@ document.getElementById('addPlanetForm').addEventListener('submit', (event) => {
     };
 
     // Envoi des données au backend
-    fetch('http://192.168.56.1:5000/api/planet', {
+    fetch('http://127.0.0.1:5000/api/planet', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

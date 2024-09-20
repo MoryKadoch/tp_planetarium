@@ -10,6 +10,8 @@ app = Flask(__name__)
  
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/planetarium_db")
  
+# Autoriser les requêtes CORS pour toutes les routes
+CORS(app)
 client = MongoClient(MONGODB_URI)
 db = client.planetarium_db
 planets_collection = db.planets
