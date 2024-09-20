@@ -33,7 +33,6 @@ function displayPlanetInfo(planet) {
         <p><strong>Température :</strong> ${planet.userData.temperature} °C</p>
         <p><strong>Temps de rotation :</strong> ${planet.userData.rotationTime} heures</p>
         <p><strong>Présence d'eau :</strong> ${planet.userData.waterPresence ? 'Oui' : 'Non'}</p>
-        <p><strong>Colonisable :</strong> ${planet.userData.colonisable ? 'Oui' : 'Non'}</p>
     `;
     infoBox.style.display = 'block'; // Afficher la boîte d'information
 }
