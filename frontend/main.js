@@ -123,9 +123,12 @@ function createPlanet(size, positionX, texturePath, planetData) {
 
             // Si la planète est colonisable, ajoutez un néon vert autour
             if (planetData.Colonisable) {
+                // const neonRing = createNeonRing(size);
+                // neonRing.position.set(positionX, 0, 0); // Positionner l'anneau au centre de la planète
+                // scene.add(neonRing);
                 const neonRing = createNeonRing(size);
-                neonRing.position.set(positionX, 0, 0); // Positionner l'anneau au centre de la planète
-                scene.add(neonRing);
+                neonRing.position.set(0, 0, 0);
+                planet.add(neonRing);
             }
         },
         undefined,
@@ -228,7 +231,6 @@ document.getElementById('addPlanetForm').addEventListener('submit', (event) => {
         Temperature: parseFloat(document.getElementById('temperature').value),
         Rotation_Time: parseFloat(document.getElementById('rotation_time').value),
         Water_Presence: document.getElementById('water_presence').value === 'true',
-        Colonisable: document.getElementById('colonisable').value === 'true'
     };
 
     console.log(formData);  // Pour vérifier les données envoyées
@@ -255,7 +257,6 @@ document.getElementById('addPlanetForm').addEventListener('submit', (event) => {
         console.error('Erreur lors de l\'ajout de la planète :', error.message);
     });
 });
-
 
 // Appeler la fonction pour afficher les planètes lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', () => {
