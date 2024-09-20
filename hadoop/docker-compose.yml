@@ -122,13 +122,12 @@ services:
     volumes:
       - .mongo-data:/data/db
 
-  # Service pour ton front-end avec npx serve
   frontend:
-    image: node:16-alpine  # Utilise une image Node.js
+    image: node:16-alpine
     container_name: frontend
-    build:  "../frontend"
+    build: "../frontend"
     ports:
-      - "3000:3000"  # Expose le port où `npx serve` fonctionne
+      - "3000:3000"
     command: ["npx", "serve", "-s", "-l", "3000"]
     depends_on:
       - flask-backend
