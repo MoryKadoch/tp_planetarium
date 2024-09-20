@@ -105,30 +105,19 @@ function createPlanet(size, positionX, texturePath, planetData) {
             const planet = new THREE.Mesh(geometry, material);
             planet.position.x = positionX;
 
-            // Assurez-vous que vous passez les données correctes ici
+            // Ajoutez les informations dans userData pour être utilisé par displayPlanetInfo
             planet.userData = {
                 name: planetData.Name,
-                colonisable: planetData.Colonisable,
                 numMoons: planetData.Num_Moons,
                 minerals: planetData.Minerals,
                 gravity: planetData.Gravity,
                 sunlightHours: planetData.Sunlight_Hours,
                 temperature: planetData.Temperature,
                 rotationTime: planetData.Rotation_Time,
-                waterPresence: planetData.Water_Presence,
+                waterPresence: planetData.Water_Presence
             };
-            
-            scene.add(planet);
 
-            // Si la planète est colonisable, ajoutez un néon vert autour
-            if (planetData.Colonisable) {
-                // const neonRing = createNeonRing(size);
-                // neonRing.position.set(positionX, 0, 0); // Positionner l'anneau au centre de la planète
-                // scene.add(neonRing);
-                const neonRing = createNeonRing(size);
-                neonRing.position.set(0, 0, 0);
-                planet.add(neonRing);
-            }
+            scene.add(planet);
         },
         undefined,
         (error) => {
