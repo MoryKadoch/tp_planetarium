@@ -33,6 +33,8 @@ function displayPlanetInfo(planet) {
         <p><strong>Température :</strong> ${planet.userData.temperature} °C</p>
         <p><strong>Temps de rotation :</strong> ${planet.userData.rotationTime} heures</p>
         <p><strong>Présence d'eau :</strong> ${planet.userData.waterPresence ? 'Oui' : 'Non'}</p>
+        <p><strong>Habitabilité :</strong> ${planet.userData.colonisable ? 'Oui' : 'Non'}</p> <!-- Ajout ici -->
+
     `;
     infoBox.style.display = 'block'; // Afficher la boîte d'information
 }
@@ -118,6 +120,7 @@ function createPlanet(size, positionX, texturePath, planetData) {
             };
 
             scene.add(planet);
+            
         },
         undefined,
         (error) => {
@@ -145,21 +148,23 @@ function displayPlanets(planets) {
         let size;
         let positionZ;
 
+        // Définir la taille de la planète en fonction de son index
         if (index < 5) {
-            size = 12;  // Augmente la taille des grandes planètes
+            size = 12;  // Taille des grandes planètes
             positionZ = Math.random() * 2 - 2; 
         } else if (index >= 5 && index < 10) {
-            size = 8;  // Augmente légèrement la taille des planètes moyennes
+            size = 8;  // Taille des planètes moyennes
             positionZ = Math.random() * 5 - 10; 
         } else {
-            size = 6;  // Augmente la taille des petites planètes
+            size = 6;  // Taille des petites planètes
             positionZ = Math.random() * 15 - 25; 
         }
 
         let positionX;
         let validPositionFound = false;
-        const minSpacing = size * 2;  // Réduction de l'espacement entre les planètes
+        const minSpacing = size * 2;  // Espacement entre les planètes
 
+        // Trouver une position valide
         for (let attempts = 0; attempts < 100; attempts++) {
             positionX = Math.random() * 600 - 300; 
 
@@ -176,17 +181,21 @@ function displayPlanets(planets) {
 
         positions.push(positionX);
 
+        // Récupérer une texture aléatoire pour la planète
         const texturePath = textures[Math.floor(Math.random() * textures.length)];
 
-        // Ajoutez l'argument planetData ici pour transmettre les informations correctes
+        // Créer la planète
         createPlanet(size, positionX, texturePath, planetData);
 
         const lastPlanet = scene.children[scene.children.length - 1];
         if (lastPlanet) {
             lastPlanet.position.z = positionZ;
+
         }
     });
 }
+
+
 
 // Fonction pour récupérer les planètes depuis le back-end
 function fetchPlanets(page = currentPage) {
@@ -198,12 +207,13 @@ function fetchPlanets(page = currentPage) {
             return response.json();
         })
         .then(data => {
-            displayPlanets(data);
+            displayPlanets(data); // Appelle displayPlanets avec les données
         })
         .catch(error => {
             console.error('Erreur lors de la récupération des données :', error);
         });
 }
+
 
 // Gestionnaire d'événements pour le formulaire d'ajout de planète
 document.getElementById('addPlanetForm').addEventListener('submit', (event) => {
