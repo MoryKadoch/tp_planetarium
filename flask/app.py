@@ -4,7 +4,8 @@ from bson import ObjectId
 import os
 from confluent_kafka import Producer
 import json
- 
+from flask_cors import CORS
+
 app = Flask(__name__)
  
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/planetarium_db")
@@ -38,7 +39,7 @@ def get_planets():
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 20))
     offset = (page - 1) * limit
-    planets_cursor = planets_collection.find().sort('_id', -1).skip(offset).limit(limit)
+    planets_cursor = planets_collection.find().sort('_id', -1).sort('_id', -1).skip(offset).limit(limit)
     planets = list(planets_cursor)
  
     for planet in planets:
