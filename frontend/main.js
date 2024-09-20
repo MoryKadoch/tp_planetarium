@@ -2,12 +2,12 @@ import * as THREE from 'three';
 
 // Tableau des textures disponibles
 const textures = [
-    'http://localhost:3000/public/img/public/img/8k_mercury.jpg',
-    'http://localhost:3000/public/img/public/img/8k_venus_surface.jpg',
-    'http://localhost:3000/public/img/public/img/8k_mars.jpg',
-    'http://localhost:3000/public/img/public/img/8k_jupiter.jpg',
-    'http://localhost:3000/public/img/public/img/8k_saturn.jpg',
-    'http://localhost:3000/public/img/public/img/8k_sun.jpg',
+    'http://localhost:3000/public/img/8k_mercury.jpg',
+    'http://localhost:3000/public/img/8k_venus_surface.jpg',
+    'http://localhost:3000/public/img/8k_mars.jpg',
+    'http://localhost:3000/public/img/8k_jupiter.jpg',
+    'http://localhost:3000/public/img/8k_saturn.jpg',
+    'http://localhost:3000/public/img/8k_sun.jpg',
 ];
 
 // Scène et caméra
@@ -95,7 +95,7 @@ function createNeonRing(size) {
 
 
 // Fonction pour créer une planète
-function createPlanet(size, positionX, texturePath, name, isColonisable) {
+function createPlanet(size, positionX, texturePath, planetData) {
     const geometry = new THREE.SphereGeometry(size, 128, 128);
     const textureLoader = new THREE.TextureLoader();
 
@@ -105,22 +105,24 @@ function createPlanet(size, positionX, texturePath, name, isColonisable) {
             const material = new THREE.MeshBasicMaterial({ map: texture });
             const planet = new THREE.Mesh(geometry, material);
             planet.position.x = positionX;
+
+            // Assurez-vous que vous passez les données correctes ici
             planet.userData = {
-                name: name,
-                colonisable: isColonisable,
-                numMoons: planet.Num_Moons,  // Exemple
-                minerals: planet.Minerals,   // Exemple
-                gravity: planet.Gravity,     // Exemple
-                sunlightHours: planet.Sunlight_Hours,  // Exemple
-                temperature: planet.Temperature,  // Exemple
-                rotationTime: planet.Rotation_Time,  // Exemple
-                waterPresence: planet.Water_Presence,  // Exemple
+                name: planetData.Name,
+                colonisable: planetData.Colonisable,
+                numMoons: planetData.Num_Moons,
+                minerals: planetData.Minerals,
+                gravity: planetData.Gravity,
+                sunlightHours: planetData.Sunlight_Hours,
+                temperature: planetData.Temperature,
+                rotationTime: planetData.Rotation_Time,
+                waterPresence: planetData.Water_Presence,
             };
             
             scene.add(planet);
 
-            // Si la planète est colonisable, ajoute un néon vert autour
-            if (isColonisable) {
+            // Si la planète est colonisable, ajoutez un néon vert autour
+            if (planetData.Colonisable) {
                 const neonRing = createNeonRing(size);
                 neonRing.position.set(positionX, 0, 0); // Positionner l'anneau au centre de la planète
                 scene.add(neonRing);
@@ -143,7 +145,6 @@ function deleteSelectedPlanet() {
 }
 document.getElementById('deletePlanetButton').addEventListener('click', deleteSelectedPlanet);
 
-
 function displayPlanets(planets) {
     // Supprimez les anciennes planètes de la scène
     scene.children = scene.children.filter(object => object.isLight || object === scene.background);
@@ -154,19 +155,19 @@ function displayPlanets(planets) {
         let positionZ;
 
         if (index < 5) {
-            size = 8; 
+            size = 12;  // Augmente la taille des grandes planètes
             positionZ = Math.random() * 2 - 2; 
         } else if (index >= 5 && index < 10) {
-            size = 4; 
+            size = 8;  // Augmente légèrement la taille des planètes moyennes
             positionZ = Math.random() * 5 - 10; 
         } else {
-            size = 2; 
+            size = 6;  // Augmente la taille des petites planètes
             positionZ = Math.random() * 15 - 25; 
         }
 
         let positionX;
         let validPositionFound = false;
-        const minSpacing = size * 5;
+        const minSpacing = size * 2;  // Réduction de l'espacement entre les planètes
 
         for (let attempts = 0; attempts < 100; attempts++) {
             positionX = Math.random() * 600 - 300; 
@@ -187,7 +188,7 @@ function displayPlanets(planets) {
         const texturePath = textures[Math.floor(Math.random() * textures.length)];
 
         // Ajoutez l'argument planetData ici pour transmettre les informations correctes
-        createPlanet(size, positionX, texturePath, planetData.Name, planetData.Colonisable, planetData);
+        createPlanet(size, positionX, texturePath, planetData);
 
         const lastPlanet = scene.children[scene.children.length - 1];
         if (lastPlanet) {
@@ -230,26 +231,31 @@ document.getElementById('addPlanetForm').addEventListener('submit', (event) => {
         Colonisable: document.getElementById('colonisable').value === 'true'
     };
 
+    console.log(formData);  // Pour vérifier les données envoyées
+
     // Envoi des données au backend
     fetch('http://127.0.0.1:5000/api/planet', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData)  // Conversion en JSON avant l'envoi
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(JSON.stringify(err)); });
+        }
+        return response.json();
+    })
     .then(data => {
         console.log('Planète ajoutée :', data);
         document.getElementById('addPlanetForm').reset(); // Réinitialiser le formulaire
-        
-        // Met à jour la liste des planètes
-        fetchPlanets(currentPage); // Recharger les planètes sur la page actuelle
     })
     .catch(error => {
-        console.error('Erreur lors de l\'ajout de la planète :', error);
+        console.error('Erreur lors de l\'ajout de la planète :', error.message);
     });
 });
+
 
 // Appeler la fonction pour afficher les planètes lorsque la page est chargée
 document.addEventListener('DOMContentLoaded', () => {
